@@ -13,7 +13,6 @@ if (!defined('NV_IS_FILE_ADMIN')) {
     exit('Stop!!!');
 }
 
-require_once NV_ROOTDIR . "/modules/quanlydonhang/funcs/functions.php";
 
 
 $xtpl = new XTemplate('products.tpl', NV_ROOTDIR . '/themes/admin_default/modules/quanlybanhang/');
@@ -29,7 +28,9 @@ $status = $nv_Request->get_title('status', 'post', 'active');
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && !empty($name)) {
     if ($id > 0) {
+       
         updateProduct($id, $name, $price, $stock, $status);
+        
     } else {
         addProduct($name, $price, $stock, $status);
     }
@@ -49,12 +50,11 @@ if ($id > 0) {
     $xtpl->assign('SELECTED_HIDDEN', $product['status'] == 'hidden' ? 'selected' : '');
 }
 
-if ($nv_Request->isset_request('delete', 'post')) {
-    $id = $nv_Request->get_int('delete', 'post', 0);
+if ($nv_Request->isset_request('delete_product', 'post')) {
+    $id = $nv_Request->get_int('id', 'post', 0);
+   
     if (deleteProduct($id)) {
-        exit('OK');
-    } else {
-        exit('Lỗi khi xóa sản phẩm!');
+       exit('OK');
     }
 }
 
@@ -102,50 +102,6 @@ if ($nv_Request->isset_request('get_product', 'post')) {
     exit();
 }
 
-
-if ($nv_Request->isset_request('save_product', 'post')) {
-    $id = $nv_Request->get_int('id', 'post', 0);
-    $name = $nv_Request->get_title('name', 'post', '', 1);
-    $price = $nv_Request->get_float('price', 'post', 0);
-    $stock = $nv_Request->get_int('stock', 'post', 0);
-    $status = $nv_Request->get_title('status', 'post', 'active');
-
-    if ($id > 0) {
-        updateProduct($id, $name, $price, $stock, $status);
-        echo json_encode(["success" => "Cập nhật thành công"]);
-    } else {
-        echo json_encode(["error" => "Lỗi khi cập nhật"]);
-    }
-    exit();
-}
-
-if (isset($_POST['save_product'])) {
-    $id = intval($_POST['id']);
-    $name = trim($_POST['name']);
-    $price = floatval($_POST['price']);
-    $stock = intval($_POST['stock']);
-    $status = $_POST['status'] === 'active' ? 'active' : 'hidden';
-
-    if ($id > 0) {
-        $sql = "UPDATE nv5_vi_quanlydonhang_products 
-                SET name=:name, price=:price, stock=:stock, status=:status 
-                WHERE id=:id";
-        $stmt = $db->prepare($sql);
-        $stmt->bindParam(':name', $name);
-        $stmt->bindParam(':price', $price);
-        $stmt->bindParam(':stock', $stock);
-        $stmt->bindParam(':status', $status);
-        $stmt->bindParam(':id', $id);
-        if ($stmt->execute()) {
-            echo json_encode(["success" => "Cập nhật thành công!"]);
-        } else {
-            echo json_encode(["error" => "Cập nhật thất bại!"]);
-        }
-    } else {
-        echo json_encode(["error" => "ID không hợp lệ!"]);
-    }
-    exit();
-}
 
 
 
