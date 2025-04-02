@@ -41,10 +41,7 @@
 <body>
 
     <!-- Menu -->
-    <div class="navbar">
-        <a href="menu.php">🏠 Trang chủ</a>
-        <a href="products.php">📦 Quản Lý Sản Phẩm</a>
-        <a href="orders.php">🛒 Quản Lý Đơn Hàng</a>
+
  
     </div>
 

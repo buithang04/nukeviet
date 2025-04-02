@@ -18,6 +18,7 @@
         <td>{PRODUCT.price}</td>
         <td>{PRODUCT.stock}</td>
         <td>{PRODUCT.status}</td>
+        
         <td>
             <button onclick="editProduct({PRODUCT.id})">✏️ Sửa</button>
             <button onclick="deleteProduct({PRODUCT.id})">🗑️ Xóa</button>
@@ -120,10 +121,10 @@ function saveProduct() {
             closeModal();
             location.reload();
         } else {
-            alert("Lỗi: " + data.error);
+            alert("Lỗi:11 " + data.error);
         }
     })
-    .catch(error => alert("Lỗi kết nối!"));
+    .catch(error => alert(error));
 }
 
 
@@ -138,11 +139,11 @@ function deleteProduct(id) {
     })
     .then(response => response.text())
     .then(data => {
-        if (data === "OK") {
+        if (data == "OK") {
             alert("Xóa thành công!");
             location.reload();
         } else {
-            alert("Lỗi khi xóa sản phẩm!");
+            alert("1");
         }
     });
 }
