@@ -1,61 +1,55 @@
 <?php
 if (!defined('NV_IS_FILE_ADMIN')) die('Stop!!!');
 
+include_once NV_ROOTDIR . '/modules/quanlydonhang/admin.functions.php';
+
 $xtpl = new XTemplate('orders.tpl', NV_ROOTDIR . '/themes/admin_default/modules/quanlybanhang/');
 
-$sql = "SELECT o.id, u.username AS customer_name, o.status, o.total_price, o.created_at 
-        FROM " . NV_PREFIXLANG . "_quanlydonhang_orders o 
-        LEFT JOIN " . NV_USERS_GLOBALTABLE . " u ON o.user_id = u.userid
-        ORDER BY o.created_at DESC";
-
-$result = $db->query($sql);
-
-while ($row = $result->fetch()) {
-    $xtpl->assign('ORDER', $row);
-    $xtpl->parse('main.order');
-}
-
-
-if ($nv_Request->isset_request('get_order', 'post')) {
+if ($nv_Request->get_title('action', 'post', '') == 'save') {
     $id = $nv_Request->get_int('id', 'post', 0);
-    $sql = "SELECT id, user_id, status, total_price FROM " . NV_PREFIXLANG . "_quanlydonhang_orders WHERE id = " . $id;
-    $order = $db->query($sql)->fetch();
-    if (!$order) {
-        echo json_encode(['error' => 'Không tìm thấy đơn hàng']);
-    } else {
-        echo json_encode($order);
-    }
-    exit;
-}
-
-
-if ($nv_Request->isset_request('id', 'post')) {
-    $id = $nv_Request->get_int('id', 'post', 0);
-    $user_id = $nv_Request->get_int('user_id', 'post', 0);
-    $total_price = $nv_Request->get_float('total_price', 'post', 0);
     $status = $nv_Request->get_title('status', 'post', '');
-    
-    if ($id > 0) {
-       
-        $sql = "UPDATE " . NV_PREFIXLANG . "_quanlybanhang_orders SET user_id=?, total_price=?, status=? WHERE id=?";
-        $stmt = $db->prepare($sql);
-        $stmt->execute([$user_id, $total_price, $status, $id]);
-    } else {
-        
-        $sql = "INSERT INTO " . NV_PREFIXLANG . "_quanlydonhang_orders (user_id, total_price, status, created_at) VALUES (?, ?, ?, NOW())";
-        $stmt = $db->prepare($sql);
-        $stmt->execute([$user_id, $total_price, $status]);
+    $total_price = $nv_Request->get_title('total_price', 'post', '');
+
+    if ($id > 0 && in_array($status, ['pending', 'processing', 'completed', 'cancelled'])) {
+        updateOrder($id, $status, $total_price);
+        nv_insert_logs(NV_LANG_DATA, $module_name, 'Update Order', 'Order ID: ' . $id, $admin_info['userid']);
+        Header('Location: ' . NV_BASE_ADMINURL . "index.php?" . NV_NAME_VARIABLE . "=quanlydonhang&" . NV_OP_VARIABLE . "=orders");
+        exit();
     }
-    echo json_encode(['success' => 'Cập nhật thành công']);
-    exit;
+}
+
+if ($nv_Request->isset_request('delete_id', 'get')) {
+    $id = $nv_Request->get_int('delete_id', 'get', 0);
+    deleteOrder($id);
+    Header("Location: " . NV_BASE_ADMINURL . "index.php?" . NV_NAME_VARIABLE . "=quanlydonhang&" . NV_OP_VARIABLE . "=orders");
+    exit();
+}
+
+$orders = getAllOrders();
+foreach ($orders as $order) {
+    $order['status_text'] = ucfirst($order['status']);
+    $order['total_price'] = number_format($order['total_price'], 2);
+    $order['created_at'] = nv_date('H:i d/m/Y', strtotime($order['created_at']));
+
+    $xtpl->assign('ORDER', $order);
+    $xtpl->parse('main.row');
 }
 
 
-if ($nv_Request->isset_request('delete_order', 'post')) {
-    $id = $nv_Request->get_int('id', 'post', 0);
-    $db->query("DELETE FROM " . NV_PREFIXLANG . "_quanlydonhang_orders WHERE id=" . $id);
-    echo "OK";
-    exit;
+if ($nv_Request->get_title('action', 'get', '') == 'edit') {
+    $id = $nv_Request->get_int('id', 'get', 0);
+    $order = getOrderById($id); 
+
+    if ($order) {
+        $xtpl->assign('ORDER', $order);
+    
+        $statuses = ['pending', 'processing', 'completed', 'cancelled'];
+        foreach ($statuses as $status_option) {
+            $xtpl->assign('SELECTED_' . strtoupper($status_option), ($order['status'] == $status_option) ? 'selected' : '');
+        }
+    
+        $xtpl->parse('main.editform');
+    }    
 }
 
 $xtpl->parse('main');

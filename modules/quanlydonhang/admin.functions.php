@@ -85,23 +85,12 @@ function formatPrice($price) {
 function getAllOrders() {
     global $db, $db_config;
     $sql = "SELECT * FROM " . $db_config['prefix'] . "_vi_quanlydonhang_orders ORDER BY created_at DESC";
-    $stmt = $db->query($sql);
-    return $stmt->fetchAll();
+    return $db->query($sql)->fetchAll();
 }
-
-
-function getOrderById($id) {
-    global $db, $db_config;
-    $stmt = $db->prepare("SELECT * FROM " . $db_config['prefix'] . "_vi_quanlydonhang_orders WHERE id = :id");
-    $stmt->bindParam(':id', $id, PDO::PARAM_INT);
-    $stmt->execute();
-    return $stmt->fetch();
-}
-
 
 function addOrder($user_id, $status, $total_price) {
     global $db, $db_config;
-    $sql = "INSERT INTO " . $db_config['prefix'] . "_vi_quanlydonhang_orders (user_id, status, total_price, created_at) 
+    $sql = "INSERT INTO " . $db_config['prefix'] . "_vi_quanlydonhang_orders (user_id, status, total_price, created_at)
             VALUES (:user_id, :status, :total_price, NOW())";
     $stmt = $db->prepare($sql);
     $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
@@ -110,11 +99,10 @@ function addOrder($user_id, $status, $total_price) {
     return $stmt->execute();
 }
 
-
 function updateOrder($id, $status, $total_price) {
     global $db, $db_config;
-    $sql = "UPDATE " . $db_config['prefix'] . "_vi_quanlydonhang_orders 
-            SET status = :status, total_price = :total_price 
+    $sql = "UPDATE " . $db_config['prefix'] . "_vi_quanlydonhang_orders
+            SET status = :status, total_price = :total_price
             WHERE id = :id";
     $stmt = $db->prepare($sql);
     $stmt->bindParam(':id', $id, PDO::PARAM_INT);
@@ -123,14 +111,22 @@ function updateOrder($id, $status, $total_price) {
     return $stmt->execute();
 }
 
-
-
 function deleteOrder($id) {
     global $db, $db_config;
     $stmt = $db->prepare("DELETE FROM " . $db_config['prefix'] . "_vi_quanlydonhang_orders WHERE id = :id");
     $stmt->bindParam(':id', $id, PDO::PARAM_INT);
     return $stmt->execute();
 }
+
+function getOrderById($id) {
+    global $db, $db_config;
+    $sql = "SELECT * FROM " . $db_config['prefix'] . "_vi_quanlydonhang_orders WHERE id = :id";
+    $stmt = $db->prepare($sql);
+    $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+    $stmt->execute();
+    return $stmt->fetch();
+}
+
 
 
 
